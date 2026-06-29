@@ -1,0 +1,176 @@
+/* app/views/tasks/application.html.erb */
+
+/* -------------------------------------------------------------------
+ヘッダー全体
+------------------------------------------------------------------- */
+.app-header {
+  max-width: 1000px;
+  width: calc(100% - 20px); /* 画面が小さい時は、両端に10pxの隙間をあけて画面幅に合わせる */
+  height: 50px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 10px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  z-index: 10;
+}
+
+/* ヘッダーの中身を横並びにして中央に寄せる */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  height: 100%;
+}
+
+
+/* -------------------------------------------------------------------
+ヘッダー フィルターボタン
+------------------------------------------------------------------- */
+.header-left {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* フィルター切り替えボタン */
+.filter-buttons {
+  display: flex;
+}
+
+.filter-button {
+  width: 60px;
+  height: 50px;
+  color: #b4b4b4;
+  font-size: 1.6rem;
+  text-decoration: none;
+  letter-spacing: 1px;
+  border-right: 1px solid #b4b4b4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.filter-button:hover {
+  color: #ffffff;
+  background-color: #38b6ff;
+  border-right: 1px solid #38b6ff;
+  transition: background-color 0.2s;
+}
+
+.filter-button.active {
+  color: #ffffff;
+  background-color: #38b6ff;
+  border-right: 1px solid #38b6ff;
+  opacity: 1; /* 文字も背景もハッキリと見せる */
+}
+
+/* ナビゲーションメニュー */
+.header-nav {
+  display: flex;
+  align-items: center;
+}
+
+/* ナビゲーションメニューのリンク */
+.header-link {
+  color: #333333;
+  text-decoration: none;
+  font-size: 1.4rem;
+  transition: color 0.2s, border-bottom 0.2s;
+  margin: 0 15px 0;
+}
+
+.header-link:hover {
+  color: #38b6ff;
+  border-bottom: 2px solid #38b6ff;
+  padding-bottom: 2px;
+}
+
+
+/* -------------------------------------------------------------------
+ヘッダー 日付とユーザー名
+------------------------------------------------------------------- */
+.header-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* 今日の日付 */
+.header-date {
+  font-size: 1.4rem;
+  margin-right: 25px;
+}
+
+/* ログイン中のユーザー名 */
+.header-user {
+  font-size: 1.4rem;
+  margin-right: 20px;
+}
+
+
+/* -------------------------------------------------------------------
+ヘッダー 三点リーダーメニュー
+------------------------------------------------------------------- */
+/* 三点リーダー */
+.menu-trigger {
+  height: 50px;
+  background: none;   /* ボタンの背景を透明にする */
+  border: none;       /* ボタンの枠線を消す */
+  font-size: 2.0rem;
+  cursor: pointer;    /* マウスを乗せた時に指マークにする */
+  padding: 5px 15px;  /* クリックできる領域を少し広げる */
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.menu-trigger:hover {
+  background-color: #f2f2f2;
+  transition: background-color 0.2s;
+}
+
+/* ドロップダウンメニュー */
+.header-menu {
+  position: relative; /* メニューを表示する基準値 */
+}
+
+.dropdown-menu {
+  display: none;       /* 最初は非表示 */
+  position: absolute;  /* ヘッダーの枠を飛び出して浮き上がらせる */
+  right: 0;   /* 三点リーダーの右端に位置を合わせる */
+  top: 100%;  /* 三点リーダーのすぐ下に配置 */
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  width: 120px;
+  padding: 5px 0;
+  z-index: 100;
+  margin-top: 5px;
+
+  /* JavaScriptでこの「active」が追加された時だけ表示する */
+  &.active {
+    display: block;
+  }
+}
+
+/* メニューの中の項目 */
+.dropdown-item {
+  display: block;
+  padding: 10px 15px;
+  color: #333333;
+  text-decoration: none;
+  font-size: 1.4rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f2f2f2;
+  }
+
+  /* ログアウトボタン */
+  &.logout:hover {
+    color: #ef4444;
+    background-color: #fef2f2;
+  }
+}

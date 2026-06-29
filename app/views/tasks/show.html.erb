@@ -1,0 +1,51 @@
+<div class="task-detail-card">
+  <h1 class="title-lg">タスク詳細</h1>
+
+  <div class="detail-content">
+    <%# カテゴリ %>
+    <% if @task.category.present? %>
+      <span class="task-category">
+        <%= @task.category&.name || "未設定" %>
+      </span>
+    <% end %>
+
+    <%# タイトル %>
+    <h2 class="task-title"><%= @task.title %></h2>
+    
+    <%# ステータスバッジ（右上に配置されるぞ） %>
+    <% if @task.completed? %>
+      <span class="status-badge completed">完了</span>
+    <% elsif @task.doing? %>
+      <span class="status-badge doing">進行中</span>
+    <% else %>
+      <span class="status-badge uncompleted">未着手</span>
+    <% end %>
+
+    <%# 期限 %>
+    <% if @task.due_date.present? %>
+      <p class="task-due-date">期限：<%= @task.due_date.strftime("%-m月%-d日 %H時%M分") %></p>
+    <% end %>
+    
+    <%# 詳細内容 %>
+    <div class="task-detail-memo">
+      <p>詳細：</p>
+      <div class="memo-format">
+        <%= simple_format(@task.content) %>
+      </div>
+    </div>
+  </div>
+
+  <%# ボタン群 %>
+  <div class="task-actions">
+    <% if @task.user == current_user %>
+      <%= button_to "削除", task_path(@task), method: :delete, class: "btn delete-btn", form: { data: { turbo_confirm: "本当に削除してもよろしいですか？" } } %>
+    <% end %>
+    
+    <div class="right-actions">
+      <% if @task.user == current_user %>
+        <%= link_to "編集", edit_task_path(@task), class: "btn edit-btn" %>
+      <% end %>
+      <%= link_to "戻る", tasks_path(scope: params[:scope], filter: params[:filter]), class: "btn back-btn" %>
+    </div>
+  </div>
+</div>

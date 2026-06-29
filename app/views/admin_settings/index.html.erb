@@ -1,0 +1,131 @@
+<h1 class="title-lg">管理者設定</h1>
+
+<div class="settings-board">
+    <div class="setting-card">
+
+    <% if @category.errors.any? %>
+      <div class="error-summary">
+        <ul>
+          <% @category.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @category, url: create_category_admin_settings_path, local: true do |f| %>
+    <h2 class="title-md">カテゴリ登録</h2>
+      <div class="setting-form-group">
+        <%= f.text_field :name, class: "form-input", placeholder: "新しいカテゴリ名を入力" %>
+        <%= f.submit "追加", class: "btn submit-btn setting-submit" %>
+      </div>
+    <% end %>
+
+    <h2 class="setting-title category-title">登録済みのカテゴリ</h2>
+    <% if @categories.empty? %>
+      <p class="empty-sub-message">登録されているカテゴリはありません。</p>
+    <% else %>
+      <ul id="category-list" class="setting-list">
+        <% @categories.each do |category| %>
+          <li class="setting-list-item category-item" data-id="<%= category.id %>">
+            <span class="name"><%= category.name %></span>
+            <%= button_to "削除", destroy_category_admin_settings_path(category), method: :delete, class: "btn delete-btn", form: { data: { turbo_confirm: "カテゴリ「#{category.name}」を削除してもよろしいですか？" } } %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div class="setting-card">
+
+    <% if @team.errors.any? %>
+      <div class="error-summary">
+        <ul>
+          <% @team.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @team, url: create_team_admin_settings_path, local: true do |f| %>
+      <h2 class="title-md">チーム登録</h2>
+      <div class="setting-form-group">
+        <%= f.text_field :name, class: "form-input", placeholder: "新しいチーム名を入力" %>
+        <%= f.submit "追加", class: "btn submit-btn setting-submit" %>
+      </div>
+    <% end %>
+
+    <h2 class="setting-title team-title">登録済みのチーム</h2>
+    <% if @teams.empty? %>
+      <p class="empty-sub-message">登録されているチームはありません。</p>
+    <% else %>
+      <ul id="team-list" class="setting-list">
+        <% @teams.each do |team| %>
+          <li class="setting-list-item team-item" data-id="<%= team.id %>">
+            <span class="name"><%= team.name %></span>
+            <%= button_to "削除", destroy_team_admin_settings_path(team), method: :delete, class: "btn delete-btn", form: { data: { turbo_confirm: "チーム「#{team.name}」を削除してもよろしいですか？" } } %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+</div>
+
+
+
+
+<%# ===== SortableJS ===== %>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+  document.addEventListener("turbo:load", function() {
+    
+    // 共通のAjax）の仕組み
+    function sendSortRequest(url, id, newIndex) {
+      // Railsのセキュリティチェック（CSRFトークン）を通過するためのお守り
+      const token = document.querySelector('meta[name="csrf-token"]').content;
+
+      // 指定されたURLに、裏側でデータを送信
+      fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': token
+        },
+        body: JSON.stringify({ id: id, new_position: newIndex })
+      });
+    }
+
+    // --- カテゴリのリスト ---
+    const categoryList = document.getElementById('category-list');
+    if (categoryList) {
+      Sortable.create(categoryList, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        dataIdAttr: 'data-id', // 後で追加するIDの目印
+        onEnd: function (evt) {
+          // 動かし終わったら、こっそり通信を実行
+          const id = evt.item.getAttribute('data-id');
+          sendSortRequest('/admin_settings/sort_category', id, evt.newIndex);
+        }
+      });
+    }
+
+    // --- チームのリスト ---
+    const teamList = document.getElementById('team-list');
+    if (teamList) {
+      Sortable.create(teamList, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        dataIdAttr: 'data-id',
+        onEnd: function (evt) {
+          const id = evt.item.getAttribute('data-id');
+          sendSortRequest('/admin_settings/sort_team', id, evt.newIndex);
+        }
+      });
+    }
+
+  });
+</script>

@@ -1,0 +1,48 @@
+<div class="task-form">
+  <%= form_with model: @task, local: true do |f| %>
+
+    <% if @task.errors.any? %>
+      <div class="error-summary">
+        <ul>
+          <% @task.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <%= f.label :title, "タスク名" %>
+      <%= f.text_field :title, class: "form-input" %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :category_id, "カテゴリ" %>
+      <%= f.collection_select :category_id, Category.all, :id, :name, { include_blank: "選択してください" }, class: "form-select" %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :status, "進捗状況" %>
+      <%= f.select :status, [["未着手", "uncompleted"], ["進行中", "doing"], ["完了", "completed"]], {}, class: "form-select" %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :due_date, "期限" %>
+      <%= f.datetime_field :due_date, class: "form-input" %>
+    </div>
+
+    <div class="form-group">
+      <%= f.label :content, "詳細" %>
+      <%= f.text_area :content, class: "form-textarea" %>
+    </div>
+
+    <div>
+      <%= f.submit "タスクを登録する", class: "btn submit-btn" %>
+    </div>
+
+  <% end %>
+</div>
+
+<div class="back-link">
+  <%= link_to "タスク一覧に戻る", root_path, class: "btn back-link-btn" %>
+</div>

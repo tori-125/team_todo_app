@@ -1,0 +1,298 @@
+<%# ===== 見出し ===== %>
+<h1 class="title-lg">
+  <% if params[:filter] == "completed" %>
+    <% if params[:scope] == "team" %>
+      <span class="blue-font"><%= current_user.team&.name || "未設定" %></span> の完了済タスク一覧
+    <% else %>
+      <span class="blue-font"><%= current_user.name %></span> の完了済タスク一覧
+    <% end %>
+  <% elsif params[:scope] == "team" %>
+    <span class="blue-font"><%= current_user.team&.name || "未設定" %></span> のチームタスク一覧
+  <% else %>
+    <span class="blue-font"><%= current_user.name %></span> のタスク一覧
+  <% end %>
+</h1>
+
+
+
+<%# ===== MYタスク一覧 ===== %>
+<%# ===== 期限切れ＆今日のタスクの進捗バー ===== %>
+<% if params[:filter].blank? && params[:scope].blank? %>
+  <% 
+    today = Date.today
+    # 朝5時リセットの基準
+    boundary_time = (Time.current - 5.hours).beginning_of_day + 5.hours
+    
+    # まず昔に完了したタスクを除外
+    valid_tasks = @tasks.select { |t| !t.completed? || t.updated_at >= boundary_time }
+
+    # 残ったタスクから「期限切れ」と「今日」だけを集める
+    target_tasks = valid_tasks.select do |t| 
+      t.due_date&.to_date && (t.due_date.to_date < today || t.due_date.to_date == today)
+    end
+
+    # 対象タスクの総数
+    total_count = target_tasks.count
+    
+    if total_count > 0
+      # 完了=1点、進行中=0.5点
+      earned_points = (target_tasks.count(&:completed?) * 1.0) + (target_tasks.count(&:doing?) * 0.5)
+
+      # パーセントを計算
+      progress_percent = (earned_points / total_count * 100).round
+    else
+      progress_percent = 0 # タスクが1つもない場合は0%にする
+    end
+
+    # 進捗具合に応じて色が変わるクラスを設定
+    color_class = if progress_percent <= 33
+                    "bar-danger"
+                  elsif progress_percent <= 66
+                    "bar-warning"
+                  else
+                    "bar-success"
+                  end
+  %>
+
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="progress-title">
+        今日の進捗状況（期限切れ含む）
+      </span>
+      <span class="progress-percent">
+        <%= progress_percent %> %
+      </span>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar-fill <%= color_class %>" style="width: <%= progress_percent %>%;"></div>
+    </div>
+  </div>
+<% end %>
+
+
+
+<%# ===== 完了済タスク一覧 ===== %>
+<% if @tasks.empty? %>
+  <div class="empty-message">
+    <div class="empty-icon">✓</div>
+    <p>現在、該当するタスクはありません。</p>
+  </div>
+<% else %>
+
+  <% if params[:filter] == "completed" %>
+    <%# 完了済タスクのリスト %>
+    <ul class="task-list">
+      <% @tasks.each do |task| %>
+        <li class="task-item">
+          <%# カテゴリ %>
+          <% if task.category.present? %>
+            <span class="task-category">
+              <%= task.category&.name || "未設定" %>
+            </span>
+          <% end %>
+
+          <%# タスクタイトル %>
+          <%= link_to task.title, task_path(task, scope: params[:scope], filter: params[:filter]), class: "task-title task-show-link" %>
+
+          <%# 期限 %>
+          <% if task.due_date.present? %>
+            <span class="task-due-date">
+              期限：<%= task.due_date.strftime("%-m月%-d日 %H時%M分") %>
+            </span>
+          <% end %>
+
+          <%# 担当者 %>
+          <span class="task-owner">
+            担当：<%= task.user.name %>
+          </span>
+
+        </li>
+      <% end %>
+    </ul>
+
+
+    <%# ===== TEAMタスク一覧 ===== %>
+  <% elsif params[:scope] == "team" %>
+    <%
+      boundary_time = (Time.current - 5.hours).beginning_of_day + 5.hours
+      display_tasks = @tasks.select { |t| !t.completed? || t.updated_at >= boundary_time }
+      today = Date.today
+    %>
+
+    <div class="team-board">
+      <% @team_users.each do |user| %>
+        <% 
+          user_today_tasks = display_tasks.select { |t| t.user_id == user.id && t.due_date&.to_date && t.due_date.to_date <= today }
+          .sort_by { |t| [t.completed? ? 1 : 0, t.due_date] }
+        %>
+        <div class="team-column">
+          <h2 class="column-user-name">
+            <%= user.name %>（<%= user_today_tasks.count %>件）
+          </h2>
+
+          <%# ===== 期限切れ＆今日のタスクの進捗バー ===== %>
+          <% 
+            total_count = user_today_tasks.count
+            if total_count > 0
+              earned_points = (user_today_tasks.count(&:completed?) * 1.0) + (user_today_tasks.count(&:doing?) * 0.5)
+              progress_percent = (earned_points / total_count * 100).round
+            else
+              progress_percent = 0
+            end
+
+            team_color_class = if progress_percent <= 33
+                                 "bar-danger"
+                               elsif progress_percent <= 66
+                                 "bar-warning"
+                               else
+                                 "bar-success"
+                               end
+          %>
+          <div class="team-progress-header">
+            <span><%= progress_percent %>%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill <%= team_color_class %>" style="width: <%= progress_percent %>%;"></div>
+          </div>
+
+          <ul class="task-grid-vertical">
+            <% if user_today_tasks.empty? %>
+              <p class="empty-sub-message">今日のタスクはありません</p>
+            <% else %>
+              <% user_today_tasks.each do |task| %>
+                <li class="task-item" <%= 'task-item-completed' if task.completed? %>">
+                  <% if task.category.present? %>
+                    <div class="task-category">
+                      <%= task.category&.name || "未設定" %>
+                    </div>
+                  <% end %>
+
+                  <%# ステータスバッジ %>
+                  <% if task.completed? %>
+                    <span class="status-badge completed">完了</span>
+                  <% elsif task.doing? %>
+                    <span class="status-badge doing">進行中</span>
+                  <% else %>
+                    <span class="status-badge uncompleted">未着手</span>
+                  <% end %>
+
+                  <%= link_to task.title, task_path(task, scope: params[:scope], filter: params[:filter]), class: "task-title task-show-link" %>
+
+                <% if task.due_date.present? %>
+                  <% is_expired = task.due_date < Time.current && !task.completed? %>
+                  <p class="task-due-date <%= 'task-due-date-expired' if is_expired %>">
+                    期限：<%= task.due_date.strftime("%-m月%-d日 %H時%M分") %>
+                  </p>
+                <% end %>
+                </li>
+              <% end %>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+
+  <% else %>
+    <%# MYタスク一覧のカード %>
+    <%
+      boundary_time = (Time.current - 5.hours).beginning_of_day + 5.hours
+
+      display_tasks = @tasks.select { |t| !t.completed? || t.updated_at >= boundary_time }
+
+      today = Date.today
+      tomorrow = Date.tomorrow
+
+      task_groups = [
+        { 
+          title: "期限切れのタスク", 
+          tasks: display_tasks.select { |t| t.due_date&.to_date && t.due_date.to_date < today }
+        },
+        { 
+          title: "今日（#{today.strftime('%-m月%-d日')}）のタスク",
+          tasks: display_tasks.select { |t| t.due_date&.to_date == today }
+        },
+        { 
+          title: "明日（#{tomorrow.strftime('%-m月%-d日')}）のタスク", 
+          tasks: display_tasks.select { |t| t.due_date&.to_date == tomorrow }
+        },
+        { 
+          title: "明後日以降のタスク", 
+          tasks: display_tasks.select { |t| t.due_date&.to_date && t.due_date.to_date > tomorrow }
+        },
+        { 
+          title: "期限未設定のタスク",
+          tasks: display_tasks.select { |t| t.due_date.nil? }
+        }
+      ]
+    %>
+
+    <% task_groups.each do |group| %>
+      <% next if group[:tasks].empty? %>
+
+      <div class="date-group">
+        <h2 class="group-date-title">
+          <%= group[:title] %> （<%= group[:tasks].count %>件）
+        </h2>
+
+        <ul class="task-grid">
+          <% group[:tasks].each do |task| %>
+            <li class="task-item">
+
+              <%# カテゴリ %>
+              <% if task.category.present? %>
+                <div class="task-category">
+                  <%= task.category&.name || "未設定" %>
+                </div>
+              <% end %>
+
+              <%# バッジ %>
+              <% if task.completed? %>
+                <%= link_to "完了", toggle_status_task_path(task),
+                  data: { turbo_method: :patch },
+                  onclick: "sessionStorage.setItem('scrollPosition', window.scrollY);",
+                  class: "status-badge completed" %>
+              <% elsif task.doing? %>
+                <%= link_to "進行中", toggle_status_task_path(task),
+                  data: { turbo_method: :patch },
+                  onclick: "sessionStorage.setItem('scrollPosition', window.scrollY);",
+                  class: "status-badge doing" %>
+              <% else %>
+                <%= link_to "未着手", toggle_status_task_path(task),
+                  data: { turbo_method: :patch },
+                  onclick: "sessionStorage.setItem('scrollPosition', window.scrollY);",
+                  class: "status-badge uncompleted" %>
+              <% end %>
+
+              <%# タイトル %>
+              <%= link_to task.title, task_path(task, scope: params[:scope], filter: params[:filter]), class: "task-title task-show-link" %>
+
+              <%# 期限 %>
+              <% if task.due_date.present? %>
+                <% is_expired = task.due_date < Time.current && !task.completed? %>
+                <p class="task-due-date <%= 'task-due-date-expired' if is_expired %>">
+                  期限：<%= task.due_date.strftime("%-m月%-d日 %H時%M分") %>
+                </p>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
+
+
+<%# ===== JavaScript ===== %>
+<script>
+  // 画面が新しくなったとき、記憶したスクロール位置があれば自動でそこに戻す
+  document.addEventListener("turbo:load", function() {
+    const scrollPosition = sessionStorage.getItem("scrollPosition");
+    if (scrollPosition) {
+      window.scrollTo(0, parseInt(scrollPosition, 10));
+      sessionStorage.removeItem("scrollPosition"); // 用が済んだら記憶を消す
+    }
+  });
+</script>
+
+
+

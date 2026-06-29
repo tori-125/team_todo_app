@@ -1,0 +1,21 @@
+ja:
+  activerecord:
+    # 1. 項目名（見出し）の日本語化
+    attributes:
+      task:
+        title: "タスク名"
+        category: "カテゴリ"
+        content: "詳細"
+
+    # 2. エラーメッセージの日本語化
+    errors:
+      models:
+        task:
+          attributes:
+            title:
+              blank: "を入力してください"
+              too_long: "は30文字以内で入力してください"
+            category:
+              blank: "を選択してください"
+            content:
+              too_long: "は500文字以内で入力してください"

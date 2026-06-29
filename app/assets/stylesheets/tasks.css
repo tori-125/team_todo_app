@@ -1,0 +1,451 @@
+/* app/views/tasks/index.html.erb */
+/* app/views/tasks/show.html.erb */
+
+
+/* -------------------------------------------------------------------
+タスクのステータスバッジ 
+------------------------------------------------------------------- */
+/* タスクのステータスバッジ */
+.status-badge {
+  color: #ffffff;
+  padding: 3px 8px;
+  font-size: 0.8em;
+  border-radius: 5px;
+  font-weight: bold;
+  text-decoration: none;
+  position: absolute; /* カードから浮き上がらせて配置する */
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+
+  /* 状態ごとの背景色 */
+  &.uncompleted {
+    background-color: #ff4500;
+  }
+  &.doing {
+    background-color: #ffbf00;
+  }
+  &.completed {
+    background-color: #89e400;
+  }
+  /* & = status-badgeでありcompletedでもある */
+}
+
+a.status-badge:hover {
+  opacity: 0.7;
+}
+
+/* -------------------------------------------------------------------
+タスク一覧ページ
+------------------------------------------------------------------- */
+/* タスク一覧ページのタスクカード */
+.task-item {
+  max-width: 250px;
+  width: calc(33.333% - 14px); /* 3列で綺麗に収まるように計算 */
+  min-width: 250px; /* 画面が狭くなってもこれ以上は縮まず、自動で次の行に落ちる */
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 軽い影 */
+  border: 1px solid #f2f2f2;
+  border-radius: 15px;
+  padding: 20px 15px 15px;
+  margin-bottom: 10px;
+  position: relative; /* バッジがカードの外に飛び出さないようにする */
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    cursor: pointer; /* マウスの矢印を人差し指にする */
+    transform: translateY(-2px); /* カードを上に浮き上がらせる */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* クリック判定をカードの端まで広げる */
+  .task-show-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1; /* カード全体を覆うレイヤーにする */
+    content: "";
+  }
+
+  /* タスク一覧のカテゴリ */
+  .task-category {
+    font-size: 0.8em;
+    color: #00bfff;
+    margin-bottom: 2px;
+  }
+
+  /* タスク一覧のタイトル */
+  .task-title {
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333333;
+    border-left: 8px solid #00bfff;
+    border-bottom: 1px solid #00bfff;
+    padding: 0 8px 0 8px;
+
+    /* テキスト省略 */
+    display: block;   /* aタグは通常インラインだからブロック化 */
+    max-width: 100%;  /* これ以上長くなったら省略する */
+    white-space: nowrap;   /* 文字を改行させない */
+    overflow: hidden;      /* 幅からはみ出た文字を見えないように隠す */
+    text-overflow: ellipsis; /* 隠れた部分の末尾を「…」 */
+  }
+
+  /* タスク一覧の期限 */
+  .task-due-date {
+    margin-top: 5px;
+    font-size: 0.8em;
+    opacity: 0.7;
+  }
+}
+
+/* 期限切れタスク */
+.task-due-date-expired {
+  color: #ff4d4d;
+  font-weight: bold;
+}
+
+/* 期限ごとのグループ */
+.date-group {
+  width: 800px;
+  margin: 0 auto;
+  margin-bottom: 40px;
+}
+
+/* 期限の日付タイトル */
+.group-date-title {
+  font-size: 2.4rem;
+  border-bottom: 1px solid #b4b4b4;
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 250px); /* 横に3列、幅250pxの箱を並べる */ 
+  justify-content: center;
+  gap: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+
+/* -------------------------------------------------------------------
+完了済タスク一覧
+------------------------------------------------------------------- */
+/* 完了済タスク一覧ページのタスクリスト */
+.task-list {
+  width: 800px;
+  margin: 0 auto;
+  list-style: none;
+  display: flex;
+  flex-direction: column; /* 横ではなく、下へ一本道に並べる */
+}
+
+/* リスト内のタスク1件ごとの横長の形（横並びを完全に固定する） */
+.task-list .task-item {
+  display: flex;
+  align-items: center; /* 縦の真ん中で揃える */
+  justify-content: flex-start; /* 左詰めで並べる */
+  gap: 30px; /* 各項目の間のすき間 */
+  padding: 14px 20px;
+  background-color: #ffffff; /* 背景を白にする */
+  border-radius: 8px; /* 角丸 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 軽い影 */
+  
+  /* タスクカードの設定と違うところ */
+  width: 100% !important;     /* 横幅を強制的に100%にする */
+  max-width: none !important;
+  min-width: 0 !important;
+  transition: none;
+  transform: none;
+}
+
+.task-list .task-item:hover {
+  background-color: #f2f2f2;
+}
+
+/* 中の文字が絶対に縦に潰れないようにする */
+.task-list .task-item > * {
+  white-space: nowrap; /* 文字を途中で改行させず、横一行にする */
+}
+
+/* タスクリストのカテゴリ */
+.task-list .task-item .task-category {
+  width: 90px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* タスクリストのタイトル */
+.task-list .task-item .task-title {
+  width: 280px; /* タイトルの幅を固定 */
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* 長い時は「…」にする */
+}
+
+.task-list .task-item .task-title {
+  border-bottom: none;
+}
+
+/* タスクリストの期限 */
+.task-list .task-item .task-due-date {
+  flex-grow: 1; /* 残りの右側のスペースを期限がゆったり使う */
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* タスクリストの担当者名 */
+.task-list .task-item .task-owner {
+  width: 130px;
+  flex-shrink: 0;
+  white-space: nowrap; /* 担当名が絶対に重ならないように守る */
+}
+
+/* -------------------------------------------------------------------
+タスク詳細画面
+------------------------------------------------------------------- */
+.task-detail-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 40px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.detail-content {
+  position: relative; /* バッジを右上に配置するための基準値 */
+  margin-bottom: 40px;
+}
+
+.detail-content .task-category {
+  color: #38b6ff;
+  font-size: 1.4rem;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.detail-content .task-title {
+  font-size: 2.4rem;
+  border-left: 8px solid #38b6ff;
+  padding-left: 10px;
+  margin-bottom: 20px;
+  color: #333333;
+}
+
+.detail-content .task-due-date {
+  color: #666666;
+  margin-bottom: 30px;
+}
+
+.detail-content .task-detail-memo {
+  color: #333333;
+}
+
+.detail-content .memo-format {
+  margin-top: 10px;
+  line-height: 1.8;
+}
+
+/* フォーマット内の段落同士の間隔を広げる */
+/* simple_formatが自動で<p><br>を作る */
+.memo-format p {
+  margin-bottom: 20px;
+}
+
+/* ボタン群の配置 */
+.task-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f2f2f2;
+  padding-top: 20px;
+}
+
+.task-actions .right-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.right-actions {
+  margin-left: auto;
+}
+
+/* ボタンのデザイン */
+.btn {
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.delete-btn {
+  color: #ff4d4d;
+  background-color: #ffffff;
+  border: 1px solid #ff4d4d;
+}
+
+.delete-btn:hover {
+  background-color: #ffeaea;
+}
+
+.edit-btn {
+  color: #ffffff;
+  background-color: #38b6ff;
+  text-decoration: none;
+}
+
+.edit-btn:hover {
+  opacity: 0.8;
+}
+
+.back-btn {
+  color: #ffffff;
+  background-color: #38b6ff;
+  text-decoration: none;
+}
+
+.back-btn:hover {
+  opacity: 0.8;
+}
+
+/* 詳細画面のバッジだけ、ホバー効果を無効にする */
+.task-detail-card .status-badge:hover {
+  opacity: 1; /* 明るくならないようにする */
+  cursor: default; /* 指マークではなく、通常の矢印のままにする */
+}
+
+
+/* -------------------------------------------------------------------
+チームタスク一覧
+------------------------------------------------------------------- */
+/* 列を横並びにする */
+.team-board {
+  display: grid;
+  grid-template-columns: repeat(3, 280px);
+  gap: 20px;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* 各ユーザーの縦列 */
+.team-column {
+  width: 280px;
+  height: auto;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 50px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* チームタスク一覧のユーザー名 */
+.column-user-name {
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 8px;
+  /* padding-bottom: 8px; */
+}
+
+/* 縦並びのタスクリスト */
+.task-grid-vertical {
+  list-style: none;
+  padding-top: 15px;
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 2px solid #e5e5e5;
+}
+
+.task-grid-vertical .task-item {
+  width: 100% !important;  /* 通常一覧の 33.333% を打ち消し、列の幅いっぱいに広げる */
+  max-width: none !important;
+  min-width: 0 !important;
+  margin-bottom: 0;
+}
+
+/* 「今日のタスクはありません」の装飾 */
+.empty-sub-message {
+  font-size: 1.4rem;
+  color: #aaaaaa;
+  text-align: center;
+  padding: 30px 0;
+}
+
+
+
+/* 今日の進捗バーのデザイン */
+.progress-section {
+  width: 800px;
+  margin: 0 auto 50px;
+  padding: 15px;
+  border-radius: 12px;
+  background-color: #f8f9fa;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.progress-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.progress-percent {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 16px;
+  background-color: #e9ecef; /* メモリの空の部分の色 */
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.5s ease-in-out; /* ゲージがスッと動くアニメーション */
+}
+
+
+
+
+.team-progress-header {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 4px;
+  text-align: right; /* 数字を右寄せにしてスッキリ見せる */
+}
+
+
+/* 進捗％に応じた3色 */
+.progress-bar-fill.bar-danger {
+  background-color: #ff4500;
+}
+
+.progress-bar-fill.bar-warning {
+  background-color: #ffbf00;
+}
+
+.progress-bar-fill.bar-success {
+  background-color: #89e400;
+}
+
+
+

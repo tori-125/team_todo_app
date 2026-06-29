@@ -1,0 +1,539 @@
+@charset "UTF-8";
+
+@import "./tasks.css";
+@import "./header.css";
+
+/* -------------------------------------------------------------------
+全体
+------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 62.5%; /* 16px × 62.5% = 10px (1rem = 10px)になる */
+}
+
+body {
+  color: #333333;
+  font-size: 1.6rem;
+  font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Hiragino Kaku Gothic ProN, "Hiragino Sans", Meiryo, sans-serif;
+  line-height: 1.6;
+  background-color: #f2f2f2;
+  padding-top: 100px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;   /* 上から下に要素を並べる */
+  min-height: 100vh;        /* 最低でも「画面の高さ100%分」を強制確保 */
+}
+
+/* ページ大見出し */
+.title-lg {
+  font-size: 4.0rem; /* 40px */
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.title-md {
+  font-size: 2.4rem; /* 24px */
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.blue-font {
+  color: #00bfff;
+}
+
+/* 
+.small-text { font-size: 1.2rem; }
+.base-text   { font-size: 1.6rem; }
+.title-sm    { font-size: 2.4rem; }
+.title-md    { font-size: 3.2rem; }
+.title-lg    { font-size: 4.0rem; }
+*/
+
+
+/* -------------------------------------------------------------------
+app/views/layouts/application.html.erb フラッシュメッセージ
+------------------------------------------------------------------- */
+.flash-message {
+  position: fixed;      /* 画面に対して絶対固定にする */
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%); /* 完全に中央に配置する */
+  z-index: 10000;       /* カードやヘッダーよりも一番手前に表示する */
+  
+  padding: 12px 24px;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  
+  /* アニメーション：4秒かけて「出て、留まって、消える」 */
+  animation: toast-animation 4s forwards;
+
+  /* 成功通知（notice） */
+  &.notice {
+    background-color: #2ecc71;
+  }
+
+  /* 警告通知（alert） */
+  &.alert {
+    background-color: #e74c3c;
+  }
+}
+
+/* 上からふわっと降りてきて、上へスッと消えるアニメーション */
+@keyframes toast-animation {
+  0% {
+    opacity: 0;
+    top: -50px; /* 画面の外（上側）に隠しておく */
+  }
+  10% {
+    opacity: 1;
+    top: 20px;  /* スッと降りてきて定位置に止まる */
+  }
+  90% {
+    opacity: 1;
+    top: 20px;  /* しばらくそのまま表示をキープ */
+  }
+  100% {
+    opacity: 0;
+    top: -50px; /* 時間が来たら上空へ消え去る */
+    pointer-events: none; /* 消えた後はクリックの邪魔をしないようにする */
+  }
+}
+
+
+/* -------------------------------------------------------------------
+app/views/tasks/application.html.erb メイン
+------------------------------------------------------------------- */
+.app-main {
+  max-width: 1000px;
+  width: 100%;
+  padding: 50px 0;
+  background-color: #ffffff;
+  margin: 0 auto;
+  flex: 1;  /* 余った画面の縦幅を、このメインの箱が全て引き受けて伸びる */
+}
+
+/* タスクが空のときのメッセージエリア */
+.empty-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #aaaaaa;
+}
+
+/* チェックマークアイコン */
+.empty-icon {
+  font-size: 4.0rem;
+  color: #e0e0e0;
+  margin-bottom: 15px;
+}
+
+.empty-message p {
+  font-size: 1.6rem;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+
+/* -------------------------------------------------------------------
+app/views/tasks/application.html.erb フッター
+------------------------------------------------------------------- */
+.app-footer {
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e5e5;
+  margin-top: auto;  /* 上の要素が縮んでも絶対に一番下に */
+  padding: 20px;
+}
+
+.footer-text {
+  font-size: 1.2rem;
+  color: #888888;
+  text-align: center;
+  margin: 0;
+}
+
+
+/* -------------------------------------------------------------------
+app/views/tasks/_form.html.erb フォーム
+------------------------------------------------------------------- */
+/* フォーム全体のカード */
+.task-form {
+  padding: 40px;
+  max-width: 600px;
+  margin: 0 auto 30px;
+}
+
+/* 各入力項目のまとまり */
+.task-form .form-group {
+  margin-bottom: 24px;
+}
+
+/* ラベル（項目名）の装飾 */
+.task-form label {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555555;
+}
+
+/* 入力欄の共通スタイル */
+.task-form .form-input,
+.task-form .form-select,
+.task-form .form-textarea {
+  width: 100%; /* 親のカードに合わせて幅を広げる */
+  padding: 12px;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  font-family: inherit; /* Noto Sans JPを引き継ぐ */
+  font-size: 1.6rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fafafa;
+}
+
+/* 入力欄にカーソルを合わせたとき（光るエフェクト） */
+.task-form .form-input:focus,
+.task-form .form-select:focus,
+.task-form .form-textarea:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: #00bfff;
+  box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.15);
+}
+
+/* テキストエリア（詳しい内容）特有の設定 */
+.task-form .form-textarea {
+  height: 150px;
+  resize: vertical; /* 縦方向だけサイズ変更可能にする */
+}
+
+/* 登録ボタンの装飾 */
+.task-form .submit-btn {
+  width: 100%;
+  background-color: #00bfff;
+  color: #ffffff;
+  border: none;
+  padding: 14px;
+  border-radius: 6px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 50px;
+}
+
+.task-form .submit-btn:hover {
+  opacity: 0.7;
+}
+
+
+
+/* -------------------------------------------------------------------
+app/views/tasks/_form.html.erb フォームエラー
+------------------------------------------------------------------- */
+/* フォームエラーメッセージ */
+.error-summary {
+  background-color: #ffe4e1; /* 薄い赤色の背景 */
+  color: #d8000c;            /* 濃い赤色の文字 */
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.error-summary ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* フォームデザイン */
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 1.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* フォームフォーカスしたとき */
+.form-input:focus, .form-select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+  outline: none;
+}
+
+/* エラーがあるフォーム */
+.field_with_errors {
+  display: contents; /* Railsの自動生成の箱がレイアウトを崩さないようにする */
+}
+
+.field_with_errors .form-input,
+.field_with_errors .form-select {
+  border-color: #ff4500 !important;
+  background-color: #fffaf9;
+}
+
+
+/* -------------------------------------------------------------------
+app/views/tasks/_form.html.erb 一覧に戻るボタン
+------------------------------------------------------------------- */
+.back-link {
+  display: flex;
+  justify-content: center;
+}
+
+/* 戻るリンクの中央揃え */
+.back-link-btn {
+  display: block;
+  color: #333333;
+  text-decoration: none;
+}
+
+.back-link-btn:hover {
+  color: #38b6ff;
+  border-bottom: 2px solid #38b6ff;
+}
+
+
+
+/* -------------------------------------------------------------------
+app/views/sessions/new.html.erb ログイン画面
+------------------------------------------------------------------- */
+/* ログイン保持のチェックボックスの並び */
+.remember-me-group {
+  display: flex;
+  align-items: center; /* チェックボックスと文字の縦の中心を揃える */
+  gap: 8px;           /* 四角い箱と文字の間のすき間 */
+  margin-top: 15px;
+}
+
+/* チェックボックスそのものの大きさ */
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* チェックボックスのラベル文字の装飾 */
+.task-form .form-checkbox-label {
+  font-size: 1.4rem;
+  color: #555555;
+  cursor: pointer;
+  user-select: none; /* 文字をダブルクリックしたときに青く選択されるのを防ぐ */
+  margin-bottom: 0;
+}
+
+
+/* -------------------------------------------------------------------
+app/views/users/new.html.erb ユーザー新規登録画面
+------------------------------------------------------------------- */
+/* 入力欄の上のラベル文字（お名前、メールアドレスなど） */
+.form-group label {
+  display: block;
+  font-size: 1.4rem;
+  color: #555555;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* 入力フォームそのものの装飾（四角い箱） */
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 1.5rem;
+  border: 1px solid #dbdbdb;
+  border-radius: 6px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+  box-sizing: border-box; /* paddingを含めたサイズ計算にするお守り */
+
+  /* 入力欄をクリックした時のアニメーション */
+  &:focus {
+    outline: none;
+    border-color: #38b6ff;     /* タスク一覧と同じ綺麗な水色 */
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(56, 182, 255, 0.15);
+  }
+}
+
+/* ボタンを配置するエリア */
+.form-actions {
+  margin-top: 30px;
+}
+
+
+/* エラーメッセージ（赤い箱）の装飾 */
+.alert-danger {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 15px 20px;
+  margin-bottom: 25px;
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  li {
+    color: #b91c1c;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* 「すでにアカウントをお持ちの方はこちら」のリンクエリア */
+.mt-3 {
+  margin-top: 25px;
+  text-align: center;
+
+  a {
+    font-size: 1.3rem;
+    color: #888888;
+    text-decoration: none;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #38b6ff;
+      text-decoration: underline;
+    }
+  }
+}
+
+
+/* -------------------------------------------------------------------
+管理者設定画面
+------------------------------------------------------------------- */
+/* 左右に2つ並べるためのボード */
+.settings-board {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 左右を1:1の幅で均等に分ける */
+  gap: 30px;
+}
+
+/* それぞれの設定を囲むカード */
+.setting-card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  align-self: start; /* リストが増えても、左右のカードの高さがバラバラに伸びないようにする */
+}
+
+/* カード内の見出し */
+.setting-title {
+  font-size: 1.8rem;
+  margin: 50px 0 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+/* フォームの横並び設定 */
+.setting-form-group {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* 縦の真ん中を揃える */
+}
+
+.setting-form-group .form-input {
+  flex: 1; /* 入力欄を可能な限り広げる */
+  margin-bottom: 0;
+}
+
+.setting-submit {
+  color: #ffffff;
+  background-color: #38b6ff;
+  text-decoration: none;
+  border: none
+}
+
+.setting-submit:hover {
+  opacity: 0.8;
+}
+
+/* 一覧リスト */
+.setting-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 登録済リストの1行分 */
+.setting-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* :last-child = 一番下だけの設定 */
+.setting-list-item:last-child {
+  border-bottom: none;
+}
+
+
+
+/* つかんで移動している最中の要素の見た目 */
+.sortable-ghost {
+  opacity: 0.3;
+  background-color: #f0f8ff;
+}
+
+/* -------------------------------------------------------------------
+リストのアイテム共通
+------------------------------------------------------------------- */
+.setting-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 5px;
+  border-bottom: 1px solid #e5e5e5;
+  
+  cursor: grab; /* マウスを乗せると「パー」のアイコン */
+  transition: background-color 0.2s;
+}
+
+.setting-list-item:hover {
+  background-color: #f8f9fa;
+  border-radius: 4px; /* 背景色がついた時に角を少し丸くする */
+}
+
+/* クリックして掴んでいる最中は「グー」のアイコン */
+.setting-list-item:active {
+  cursor: grabbing;
+}
+
+.setting-list-item:last-child {
+  border-bottom: none;
+}
+
+/* -------------------------------------------------------------------
+名前の左側に「≡」マーク（取っ手）をCSSだけで追加する！
+------------------------------------------------------------------- */
+.setting-list-item .name::before {
+  content: "≡";
+  color: #b0b0b0;
+  font-size: 1.8rem;
+  font-weight: normal;
+  margin-right: 16px;    /* 名前との間に少し余白をあける */
+  vertical-align: middle;
+}
+
+/* 名前のスタイル自体は以前のまま */
+.setting-list-item .name {
+  font-size: 1.6rem;
+}
+
+
