@@ -7,3 +7,12 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+puts "初期データの作成を開始します..."
+
+# ここに作りたいチームの名前を書く
+Team.create!(name: "運営チーム")
+Team.create!(name: "開発チーム")
+Team.create!(name: "営業チーム")
+
+puts "初期データの作成が完了しました！"
