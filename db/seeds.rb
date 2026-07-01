@@ -8,11 +8,27 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-puts "初期データの作成を開始します..."
+puts "初期データの作成と管理者の設定を開始します..."
 
-# ここに作りたいチームの名前を書く
-Team.create!(name: "運営チーム")
-Team.create!(name: "開発チーム")
-Team.create!(name: "営業チーム")
+# 1. チームを検索または作成
+Team.find_or_create_by!(name: "運営チーム")
+Team.find_or_create_by!(name: "開発チーム")
+Team.find_or_create_by!(name: "営業チーム")
 
-puts "初期データの作成が完了しました！"
+# 2. タスクカテゴリの作成
+Category.find_or_create_by!(name: "会議")
+Category.find_or_create_by!(name: "事務作業")
+Category.find_or_create_by!(name: "開発")
+
+# 3. 今作ったアカウントを「管理者」にする
+my_email = "test@example.com" 
+
+user = User.find_by(email: my_email)
+if user
+  user.admin! # roleを1(admin)に変更する
+  puts "【成功】#{my_email} を管理者に変更しました！"
+else
+  puts "【警告】#{my_email} というユーザーは見つかりませんでした。アドレスが合っているか確認してください。"
+end
+
+puts "すべての処理が完了しました！"
